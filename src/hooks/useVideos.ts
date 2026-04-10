@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Video } from '../types/database';
 
 export function useVideos(orderBy: 'created_at' | 'views' = 'created_at', limit = 20) {
@@ -11,13 +11,8 @@ export function useVideos(orderBy: 'created_at' | 'views' = 'created_at', limit 
     async function fetchVideos() {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('videos')
-          .select('*')
-          .order(orderBy, { ascending: false })
-          .limit(limit);
-
-        if (error) throw error;
+        // Note: The backend currently supports default ordering and simple filtering
+        const data = await api.get(`/api/videos?limit=${limit}`);
         setVideos(data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch videos');
@@ -39,13 +34,7 @@ export function useRandomVideos(count = 12) {
   useEffect(() => {
     async function fetchRandomVideos() {
       try {
-        const { data, error } = await supabase
-          .from('videos')
-          .select('*')
-          .limit(100);
-
-        if (error) throw error;
-
+        const data = await api.get('/api/videos');
         const shuffled = (data || []).sort(() => Math.random() - 0.5);
         setVideos(shuffled.slice(0, count));
       } catch (err) {

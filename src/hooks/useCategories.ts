@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Category } from '../types/database';
 
 export function useCategories() {
@@ -9,12 +9,7 @@ export function useCategories() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .order('name');
-
-        if (error) throw error;
+        const data = await api.get('/api/categories');
         setCategories(data || []);
       } catch (err) {
         console.error('Error fetching categories:', err);

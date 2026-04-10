@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { Report } from '../../types/database';
 import { formatRelativeTime } from '../../utils/helpers';
 import { ArrowLeft, Check, X, Eye } from 'lucide-react';
@@ -18,12 +18,7 @@ export function ReportManagement({ onBack }: ReportManagementProps) {
 
   async function fetchReports() {
     try {
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await api.get('/api/admin/reports', true);
       setReports(data || []);
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -34,12 +29,7 @@ export function ReportManagement({ onBack }: ReportManagementProps) {
 
   async function updateReportStatus(reportId: string, status: Report['status']) {
     try {
-      const { error } = await supabase
-        .from('reports')
-        .update({ status, reviewed_at: new Date().toISOString() })
-        .eq('id', reportId);
-
-      if (error) throw error;
+      await api.post(`/api/admin/reports/${reportId}/status`, { status }, true);
       setReports(
         reports.map((r) =>
           r.id === reportId ? { ...r, status: status as Report['status'] } : r

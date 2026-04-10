@@ -1,10 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
+import { auth } from '../lib/firebase';
+import { User, signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -13,7 +12,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({
-  session: null,
   user: null,
   isAdmin: false,
   signIn: async () => {},
@@ -24,42 +22,35 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      await firebaseSignOut(auth);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
   };
 
   const value = {
-    session,
     user,
     isAdmin: !!user,
     signIn,

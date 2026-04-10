@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { useCategories } from '../../hooks/useCategories';
 import { ArrowLeft, Upload } from 'lucide-react';
 
@@ -22,16 +22,14 @@ export function VideoUpload({ onBack }: VideoUploadProps) {
     setUploading(true);
 
     try {
-      const { error } = await supabase.from('videos').insert({
+      await api.post('/api/videos', {
         title,
         description,
         category_id: categoryId || null,
         video_url: videoUrl,
         thumbnail_url: thumbnailUrl,
         duration,
-      });
-
-      if (error) throw error;
+      }, true);
 
       alert('Video uploaded successfully!');
       setTitle('');

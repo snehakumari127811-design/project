@@ -1,0 +1,16 @@
+name = "viral-raja-backend"
+main = "src/index.ts"
+compatibility_date = "2024-04-03"
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "viral-raja-db"
+# Run 'npx wrangler d1 create viral-raja-db' and paste the ID below
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "development"
+# Paste your Firebase Project ID below (found in Firebase Console -> Project Settings)
+FIREBASE_PROJECT_ID = "REPLACE_WITH_FIREBASE_PROJECT_ID"

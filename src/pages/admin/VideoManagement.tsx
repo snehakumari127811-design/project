@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { Video } from '../../types/database';
 import { formatViews, formatRelativeTime } from '../../utils/helpers';
 import { Trash2, ArrowLeft } from 'lucide-react';
@@ -18,12 +18,7 @@ export function VideoManagement({ onBack }: VideoManagementProps) {
 
   async function fetchVideos() {
     try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await api.get('/api/videos');
       setVideos(data || []);
     } catch (error) {
       console.error('Error fetching videos:', error);
@@ -36,9 +31,7 @@ export function VideoManagement({ onBack }: VideoManagementProps) {
     if (!confirm('Are you sure you want to delete this video?')) return;
 
     try {
-      const { error } = await supabase.from('videos').delete().eq('id', videoId);
-
-      if (error) throw error;
+      await api.delete(`/api/videos/${videoId}`);
       setVideos(videos.filter((v) => v.id !== videoId));
       alert('Video deleted successfully');
     } catch (error) {

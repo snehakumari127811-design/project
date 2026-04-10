@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Video, Comment } from '../types/database';
 import { formatViews, formatRelativeTime, getClientIP } from '../utils/helpers';
 import { ThumbsUp, MessageCircle, Flag, Send } from 'lucide-react';
@@ -23,19 +23,22 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
 
   const fetchVideoData = useCallback(async () => {
     try {
-      const [videoResult, commentsResult, likesResult] = await Promise.all([
-        supabase.from('videos').select('*').eq('id', videoId).single(),
-        supabase.from('comments').select('*').eq('video_id', videoId).eq('is_moderated', false).order('created_at', { ascending: false }),
-        supabase.from('likes').select('*').eq('video_id', videoId),
+      const [videoData, commentsData] = await Promise.all([
+        api.get(`/api/videos/${videoId}`),
+        api.get(`/api/videos/${videoId}/comments`), // Need to ensure backend supports this or similar
       ]);
 
-      if (videoResult.data) setVideo(videoResult.data);
-      if (commentsResult.data) setComments(commentsResult.data);
-      if (likesResult.data) {
-        setLikeCount(likesResult.data.length);
-        const userIP = await getClientIP();
-        setHasLiked(likesResult.data.some(like => like.ip_address === userIP));
+      if (videoData) {
+        setVideo(videoData);
+        // Note: For now, likes are handled separately since the backend doesn't have a join yet
+        const likesData = await api.get(`/api/videos/${videoId}/likes`);
+        if (likesData) {
+          setLikeCount(likesData.length);
+          const userIP = await getClientIP();
+          setHasLiked(likesData.some((like: any) => like.ip_address === userIP));
+        }
       }
+      if (commentsData) setComments(commentsData);
     } catch (error) {
       console.error('Error fetching video data:', error);
     } finally {
@@ -45,7 +48,7 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
 
   const incrementViews = useCallback(async () => {
     try {
-      await supabase.rpc('increment_video_views', { video_id_param: videoId });
+      await api.post(`/api/videos/${videoId}/view`, {});
     } catch (error) {
       console.error('Error incrementing views:', error);
     }
@@ -61,15 +64,13 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
 
     try {
       const userIP = await getClientIP();
-      const { error } = await supabase.from('likes').insert({
+      await api.post('/api/likes', {
         video_id: videoId,
         ip_address: userIP,
       });
 
-      if (!error) {
-        setLikeCount(prev => prev + 1);
-        setHasLiked(true);
-      }
+      setLikeCount(prev => prev + 1);
+      setHasLiked(true);
     } catch (error) {
       console.error('Error liking video:', error);
     }
@@ -80,13 +81,13 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
     if (!newComment.trim() || !commenterName.trim()) return;
 
     try {
-      const { data, error } = await supabase.from('comments').insert({
+      const data = await api.post('/api/comments', {
         video_id: videoId,
         commenter_name: commenterName,
         content: newComment,
-      }).select().single();
+      });
 
-      if (!error && data) {
+      if (data) {
         setComments(prev => [data, ...prev]);
         setNewComment('');
       }
@@ -100,18 +101,16 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
     if (!reportDescription.trim()) return;
 
     try {
-      const { error } = await supabase.from('reports').insert({
+      await api.post('/api/reports', {
         video_id: videoId,
         description: reportDescription,
         reporter_email: reportEmail,
       });
 
-      if (!error) {
-        alert('Report submitted successfully. Thank you for helping us maintain our community standards.');
-        setShowReport(false);
-        setReportDescription('');
-        setReportEmail('');
-      }
+      alert('Report submitted successfully. Thank you for helping us maintain our community standards.');
+      setShowReport(false);
+      setReportDescription('');
+      setReportEmail('');
     } catch (error) {
       console.error('Error submitting report:', error);
     }

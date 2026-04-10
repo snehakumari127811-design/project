@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import {
   BarChart3,
@@ -40,22 +40,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   async function fetchStats() {
     try {
-      const [videos, likes, comments, reports] = await Promise.all([
-        supabase.from('videos').select('views'),
-        supabase.from('likes').select('id', { count: 'exact', head: true }),
-        supabase.from('comments').select('id', { count: 'exact', head: true }),
-        supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      ]);
-
-      const totalViews = videos.data?.reduce((sum, v) => sum + v.views, 0) || 0;
-
-      setStats({
-        totalVideos: videos.data?.length || 0,
-        totalViews,
-        totalLikes: likes.count || 0,
-        totalComments: comments.count || 0,
-        pendingReports: reports.count || 0,
-      });
+      const data = await api.get('/api/admin/stats', true);
+      setStats(data);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }

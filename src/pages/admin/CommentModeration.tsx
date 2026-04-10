@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { Comment } from '../../types/database';
 import { formatRelativeTime } from '../../utils/helpers';
 import { ArrowLeft, Trash2, Ban } from 'lucide-react';
@@ -18,13 +18,7 @@ export function CommentModeration({ onBack }: CommentModerationProps) {
 
   async function fetchComments() {
     try {
-      const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
+      const data = await api.get('/api/admin/comments', true);
       setComments(data || []);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -37,9 +31,7 @@ export function CommentModeration({ onBack }: CommentModerationProps) {
     if (!confirm('Are you sure you want to delete this comment?')) return;
 
     try {
-      const { error } = await supabase.from('comments').delete().eq('id', commentId);
-
-      if (error) throw error;
+      await api.delete(`/api/admin/comments/${commentId}`);
       setComments(comments.filter((c) => c.id !== commentId));
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -48,12 +40,7 @@ export function CommentModeration({ onBack }: CommentModerationProps) {
 
   async function handleModerate(commentId: string) {
     try {
-      const { error } = await supabase
-        .from('comments')
-        .update({ is_moderated: true })
-        .eq('id', commentId);
-
-      if (error) throw error;
+      await api.post(`/api/admin/comments/${commentId}/moderate`, {}, true);
       setComments(
         comments.map((c) => (c.id === commentId ? { ...c, is_moderated: true } : c))
       );
