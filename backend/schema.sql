@@ -36,9 +36,28 @@ CREATE TABLE comments (
 CREATE TABLE likes (
   id TEXT PRIMARY KEY,
   video_id TEXT REFERENCES videos(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT, -- Firebase UID (Nullable for guest likes)
   ip_address TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now')),
-  UNIQUE(video_id, ip_address)
+  UNIQUE(video_id, ip_address),
+  UNIQUE(video_id, user_id)
+);
+
+-- User History Table
+CREATE TABLE user_history (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL, -- Firebase UID
+  video_id TEXT REFERENCES videos(id) ON DELETE CASCADE NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- User Saves Table
+CREATE TABLE user_saves (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL, -- Firebase UID
+  video_id TEXT REFERENCES videos(id) ON DELETE CASCADE NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(user_id, video_id)
 );
 
 -- Reports Table

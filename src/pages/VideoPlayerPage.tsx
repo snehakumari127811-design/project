@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
 import { Video, Comment } from '../types/database';
 import { formatViews, formatRelativeTime, getClientIP } from '../utils/helpers';
-import { ThumbsUp, MessageCircle, Flag, Send } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Flag, Send, Bookmark, BookmarkCheck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface VideoPlayerPageProps {
   videoId: string;
@@ -19,23 +20,34 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
   const [commenterName, setCommenterName] = useState('');
   const [reportDescription, setReportDescription] = useState('');
   const [reportEmail, setReportEmail] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchVideoData = useCallback(async () => {
     try {
       const [videoData, commentsData] = await Promise.all([
         api.get(`/api/videos/${videoId}`),
-        api.get(`/api/videos/${videoId}/comments`), // Need to ensure backend supports this or similar
+        api.get(`/api/videos/${videoId}/comments`),
       ]);
 
       if (videoData) {
         setVideo(videoData);
-        // Note: For now, likes are handled separately since the backend doesn't have a join yet
         const likesData = await api.get(`/api/videos/${videoId}/likes`);
         if (likesData) {
           setLikeCount(likesData.length);
           const userIP = await getClientIP();
-          setHasLiked(likesData.some((like: any) => like.ip_address === userIP));
+          setHasLiked(likesData.some((like: any) => 
+            (user && like.user_id === user.uid) || like.ip_address === userIP
+          ));
+        }
+
+        if (user) {
+          const saves = await api.get('/api/user/saves', true);
+          setIsSaved(saves.some((s: any) => s.id === videoId));
+          
+          // Record history
+          await api.post('/api/user/history', { video_id: videoId }, true);
         }
       }
       if (commentsData) setComments(commentsData);
@@ -44,7 +56,7 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
     } finally {
       setLoading(false);
     }
-  }, [videoId]);
+  }, [videoId, user]);
 
   const incrementViews = useCallback(async () => {
     try {
@@ -67,12 +79,31 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
       await api.post('/api/likes', {
         video_id: videoId,
         ip_address: userIP,
-      });
+      }, !!user);
 
       setLikeCount(prev => prev + 1);
       setHasLiked(true);
     } catch (error) {
       console.error('Error liking video:', error);
+    }
+  }
+
+  async function handleSave() {
+    if (!user) {
+      alert('Please sign in to save videos');
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await api.delete(`/api/user/saves/${videoId}`);
+        setIsSaved(false);
+      } else {
+        await api.post('/api/user/saves', { video_id: videoId }, true);
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Error saving video:', error);
     }
   }
 
@@ -176,6 +207,17 @@ export function VideoPlayerPage({ videoId, onBack }: VideoPlayerPageProps) {
                 >
                   <ThumbsUp className="w-5 h-5" />
                   <span>{likeCount}</span>
+                </button>
+                <button
+                  onClick={handleSave}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                    isSaved
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                  }`}
+                >
+                  {isSaved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                  <span>{isSaved ? 'Saved' : 'Save'}</span>
                 </button>
                 <button
                   onClick={() => setShowReport(true)}

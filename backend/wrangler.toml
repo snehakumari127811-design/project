@@ -7,10 +7,11 @@ compatibility_date = "2024-04-03"
 binding = "DB"
 database_name = "viral-raja-db"
 # Run 'npx wrangler d1 create viral-raja-db' and paste the ID below
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "feb20d2c-e077-4092-ac49-e422dbf53834"
 
 # Environment Variables
 [vars]
 ENVIRONMENT = "development"
 # Paste your Firebase Project ID below (found in Firebase Console -> Project Settings)
-FIREBASE_PROJECT_ID = "REPLACE_WITH_FIREBASE_PROJECT_ID"
+FIREBASE_PROJECT_ID = "stream-web-rishi"
+ADMIN_TOKEN = "vr_admin_secret_2024"

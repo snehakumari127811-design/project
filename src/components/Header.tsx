@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, User as UserIcon, Library, LogIn } from 'lucide-react';
 import { useCategories } from '../hooks/useCategories';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   onSearch: (query: string) => void;
   onCategorySelect: (categoryId: string | null) => void;
+  onPageChange: (page: 'home' | 'video' | 'admin' | 'library' | 'auth') => void;
   selectedCategory: string | null;
 }
 
-export function Header({ onSearch, onCategorySelect, selectedCategory }: HeaderProps) {
+export function Header({ onSearch, onCategorySelect, onPageChange, selectedCategory }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { categories } = useCategories();
+  const { user, signOut } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,14 +56,14 @@ export function Header({ onSearch, onCategorySelect, selectedCategory }: HeaderP
             </nav>
           </div>
 
-          <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-md mx-8">
+          <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-sm mx-4">
             <div className="relative w-full">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search videos..."
-                className="w-full bg-gray-800 text-white px-4 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full bg-gray-800 text-white px-4 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
               />
               <button
                 type="submit"
@@ -70,6 +73,38 @@ export function Header({ onSearch, onCategorySelect, selectedCategory }: HeaderP
               </button>
             </div>
           </form>
+
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <>
+                <button
+                  onClick={() => onPageChange('library')}
+                  className="flex items-center space-x-1 text-gray-300 hover:text-white transition px-3 py-2 rounded-lg hover:bg-gray-800"
+                >
+                  <Library className="w-5 h-5 text-red-500" />
+                  <span className="text-sm font-medium">Library</span>
+                </button>
+                <div className="h-6 w-px bg-gray-700 mx-2" />
+                <button 
+                  onClick={() => onPageChange('auth')}
+                  className="flex items-center space-x-2 text-gray-300 hover:text-white transition group"
+                >
+                  <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center group-hover:bg-gray-700 transition">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm font-medium max-w-[100px] truncate">{user.email?.split('@')[0]}</span>
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => onPageChange('auth')}
+                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition text-sm font-semibold"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
+              </button>
+            )}
+          </div>
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

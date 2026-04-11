@@ -10,6 +10,8 @@ import { VideoManagement } from './pages/admin/VideoManagement';
 import { ReportManagement } from './pages/admin/ReportManagement';
 import { CommentModeration } from './pages/admin/CommentModeration';
 import { VideoUpload } from './pages/admin/VideoUpload';
+import { AdminLayout } from './pages/admin/AdminLayout';
+
 
 type Page = 'home' | 'video' | 'admin';
 type AdminSection = 'dashboard' | 'videos' | 'reports' | 'comments' | 'upload';
@@ -56,6 +58,12 @@ function AppContent() {
     if (verified === 'true') {
       setAgeVerified(true);
     }
+
+    // Basic URL routing for refresh support
+    const path = window.location.pathname;
+    if (path.startsWith('/admin')) {
+      setCurrentPage('admin');
+    }
   }, []);
 
   function handleAgeAccept() {
@@ -100,18 +108,28 @@ function AppContent() {
       return <AdminLogin />;
     }
 
-    switch (adminSection) {
-      case 'videos':
-        return <VideoManagement onBack={() => setAdminSection('dashboard')} />;
-      case 'reports':
-        return <ReportManagement onBack={() => setAdminSection('dashboard')} />;
-      case 'comments':
-        return <CommentModeration onBack={() => setAdminSection('dashboard')} />;
-      case 'upload':
-        return <VideoUpload onBack={() => setAdminSection('dashboard')} />;
-      default:
-        return <AdminDashboard onNavigate={setAdminSection} />;
-    }
+    return (
+      <AdminLayout
+        activeSection={adminSection}
+        onNavigate={setAdminSection}
+        onBack={() => setCurrentPage('home')}
+      >
+        {(() => {
+          switch (adminSection) {
+            case 'videos':
+              return <VideoManagement onBack={() => setAdminSection('dashboard')} />;
+            case 'reports':
+              return <ReportManagement onBack={() => setAdminSection('dashboard')} />;
+            case 'comments':
+              return <CommentModeration onBack={() => setAdminSection('dashboard')} />;
+            case 'upload':
+              return <VideoUpload onBack={() => setAdminSection('dashboard')} />;
+            default:
+              return <AdminDashboard onNavigate={setAdminSection} />;
+          }
+        })()}
+      </AdminLayout>
+    );
   }
 
   return (
@@ -139,14 +157,15 @@ function AppContent() {
       {currentPage !== 'video' && <Footer />}
 
       <a
-        href="#"
+        href="/admin"
         onClick={(e) => {
           e.preventDefault();
           setCurrentPage('admin');
+          window.history.pushState({}, '', '/admin/dashboard');
         }}
         className="fixed bottom-4 right-4 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white px-3 py-2 rounded-lg text-xs transition opacity-50 hover:opacity-100"
       >
-        Admin
+        Admin Terminal
       </a>
     </div>
   );
