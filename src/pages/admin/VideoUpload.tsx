@@ -7,7 +7,7 @@ interface VideoUploadProps {
   onBack: () => void;
 }
 
-export function VideoUpload({ onBack }: VideoUploadProps) {
+export function VideoUpload({}: VideoUploadProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');

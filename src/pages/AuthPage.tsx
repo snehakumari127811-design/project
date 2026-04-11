@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, UserPlus, Mail, Lock, AlertCircle, ChevronRight, Play } from 'lucide-react';
+import { Mail, Lock, AlertCircle, ChevronRight, Play } from 'lucide-react';
 
 interface AuthPageProps {
   onSuccess: () => void;

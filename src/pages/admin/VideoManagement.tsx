@@ -8,7 +8,7 @@ interface VideoManagementProps {
   onBack: () => void;
 }
 
-export function VideoManagement({ onBack }: VideoManagementProps) {
+export function VideoManagement({}: VideoManagementProps) {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

@@ -14,7 +14,7 @@ export function Header({ onSearch, onCategorySelect, onPageChange, selectedCateg
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { categories } = useCategories();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

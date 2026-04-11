@@ -8,7 +8,7 @@ interface ReportManagementProps {
   onBack: () => void;
 }
 
-export function ReportManagement({ onBack }: ReportManagementProps) {
+export function ReportManagement({}: ReportManagementProps) {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
