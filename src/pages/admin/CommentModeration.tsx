@@ -4,11 +4,8 @@ import { Comment } from '../../types/database';
 import { formatRelativeTime } from '../../utils/helpers';
 import { Trash2, Ban, ShieldCheck, MessageSquare, ShieldAlert } from 'lucide-react';
 
-interface CommentModerationProps {
-  onBack: () => void;
-}
 
-export function CommentModeration({ onBack }: CommentModerationProps) {
+export function CommentModeration() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'flagged' | 'hidden'>('all');

@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "backend:dev": "wrangler dev backend/src/index.ts",
-    "backend:deploy": "wrangler deploy backend/src/index.ts"
+    "backend:deploy": "wrangler deploy backend/src/index.ts",
+    "push": "powershell -Command \"$p = 'C:\\Program Files\\Git\\mingw64\\bin;C:\\Program Files\\Git\\cmd;'; $env:Path = $p + $env:Path; git add .; git commit -m 'Finalizing modernization and routing'; git push origin main\"",
+    "git:push": "npm run push"
   },
   "dependencies": {
     "firebase": "^12.11.0",

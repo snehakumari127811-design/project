@@ -11,9 +11,11 @@ import { ReportManagement } from './pages/admin/ReportManagement';
 import { CommentModeration } from './pages/admin/CommentModeration';
 import { VideoUpload } from './pages/admin/VideoUpload';
 import { AdminLayout } from './pages/admin/AdminLayout';
+import { LibraryPage } from './pages/LibraryPage';
+import { AuthPage } from './pages/AuthPage';
 
 
-type Page = 'home' | 'video' | 'admin';
+type Page = 'home' | 'video' | 'admin' | 'library' | 'auth';
 type AdminSection = 'dashboard' | 'videos' | 'reports' | 'comments' | 'upload';
 
 function AgeDisclaimer({ onAccept }: { onAccept: () => void }) {
@@ -121,7 +123,7 @@ function AppContent() {
             case 'reports':
               return <ReportManagement onBack={() => setAdminSection('dashboard')} />;
             case 'comments':
-              return <CommentModeration onBack={() => setAdminSection('dashboard')} />;
+              return <CommentModeration />;
             case 'upload':
               return <VideoUpload onBack={() => setAdminSection('dashboard')} />;
             default:
@@ -138,6 +140,7 @@ function AppContent() {
         <Header
           onSearch={handleSearch}
           onCategorySelect={handleCategorySelect}
+          onPageChange={setCurrentPage}
           selectedCategory={selectedCategory}
         />
       )}
@@ -152,6 +155,14 @@ function AppContent() {
 
       {currentPage === 'video' && selectedVideoId && (
         <VideoPlayerPage videoId={selectedVideoId} onBack={handleBackToHome} />
+      )}
+
+      {currentPage === 'library' && (
+        <LibraryPage onVideoClick={handleVideoClick} />
+      )}
+
+      {currentPage === 'auth' && (
+        <AuthPage onSuccess={() => setCurrentPage('home')} />
       )}
 
       {currentPage !== 'video' && <Footer />}
