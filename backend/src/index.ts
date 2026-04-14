@@ -218,42 +218,44 @@ export default {
 			
 			// --- ADMIN ROUTES Protection ---
 			
-			const adminTokenHeader = request.headers.get('X-Admin-Token') || request.headers.get('x-admin-token');
-			let isAdminRequest = false;
+			if (path.startsWith('/api/admin/')) {
+				const adminTokenHeader = request.headers.get('X-Admin-Token') || request.headers.get('x-admin-token');
+				let isAdminRequest = false;
 
-			if (adminTokenHeader && env.ADMIN_TOKEN && adminTokenHeader === env.ADMIN_TOKEN) {
-				isAdminRequest = true;
-			}
-
-			if (!isAdminRequest) {
-				if (!authHeader || !authHeader.startsWith('Bearer ')) {
-					return new Response('Unauthorized: Missing Token', { status: 401, headers: corsHeaders });
+				if (adminTokenHeader && env.ADMIN_TOKEN && adminTokenHeader === env.ADMIN_TOKEN) {
+					isAdminRequest = true;
 				}
 
-				const token = authHeader.split(' ')[1];
-				const projectId = env.FIREBASE_PROJECT_ID;
-
-				try {
-					// Verify the Firebase ID Token
-					const JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
-					
-					const { payload } = await jose.jwtVerify(token, JWKS, {
-						issuer: `https://securetoken.google.com/${projectId}`,
-						audience: projectId,
-					});
-
-					// Token is valid! Proceed to admin routes.
-					// Now we also verify if the user IS in the admins table
-					const adminCheck = await env.DB.prepare('SELECT 1 FROM admins WHERE id = ?').bind(payload.sub).first();
-					if (!adminCheck) {
-						// Hardcoded fallback for your email during setup
-						if (payload.email !== 'snehakumari1278.11@gmail.com' && payload.email !== 'admin@viralraja.com') {
-							return new Response('Unauthorized: Admin access required', { status: 403, headers: corsHeaders });
-						}
+				if (!isAdminRequest) {
+					if (!authHeader || !authHeader.startsWith('Bearer ')) {
+						return new Response('Unauthorized: Missing Token', { status: 401, headers: corsHeaders });
 					}
-				} catch (err: any) {
-					console.error('Token verification failed:', err.message);
-					return new Response(`Unauthorized: Invalid Token - ${err.message}`, { status: 401, headers: corsHeaders });
+
+					const token = authHeader.split(' ')[1];
+					const projectId = env.FIREBASE_PROJECT_ID;
+
+					try {
+						// Verify the Firebase ID Token
+						const JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
+						
+						const { payload } = await jose.jwtVerify(token, JWKS, {
+							issuer: `https://securetoken.google.com/${projectId}`,
+							audience: projectId,
+						});
+
+						// Token is valid! Proceed to admin routes.
+						// Now we also verify if the user IS in the admins table
+						const adminCheck = await env.DB.prepare('SELECT 1 FROM admins WHERE id = ?').bind(payload.sub).first();
+						if (!adminCheck) {
+							// Hardcoded fallback for your email during setup
+							if (payload.email !== 'snehakumari1278.11@gmail.com' && payload.email !== 'admin@viralraja.com') {
+								return new Response('Unauthorized: Admin access required', { status: 403, headers: corsHeaders });
+							}
+						}
+					} catch (err: any) {
+						console.error('Token verification failed:', err.message);
+						return new Response(`Unauthorized: Invalid Token - ${err.message}`, { status: 401, headers: corsHeaders });
+					}
 				}
 			}
 
