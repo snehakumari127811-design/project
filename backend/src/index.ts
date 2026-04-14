@@ -13,7 +13,11 @@ export interface Env {
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url);
-		const path = url.pathname;
+		// Normalize path: Remove trailing slashes and ensure it starts with /
+		let path = url.pathname;
+		if (path.length > 1 && path.endsWith('/')) {
+			path = path.slice(0, -1);
+		}
 		const method = request.method;
 
 		// CORS setup
@@ -28,6 +32,15 @@ export default {
 		}
 
 		try {
+			// GET / (Health Check)
+			if ((path === '/' || path === '') && method === 'GET') {
+				return Response.json({
+					status: "online",
+					message: "Viral Raja API is running",
+					timestamp: new Date().toISOString()
+				}, { headers: corsHeaders });
+			}
+
 			// --- USER AUTHENTICATION MIDDLEWARE (OPTIONAL FOR PUBLIC) ---
 			const authHeader = request.headers.get('Authorization');
 			let authenticatedUser: any = null;
