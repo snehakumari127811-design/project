@@ -10,6 +10,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Check for required configuration
+if (!firebaseConfig.apiKey) {
+  console.error("🔥 Firebase Configuration is missing! Please set your VITE_ environment variables in Vercel.");
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
